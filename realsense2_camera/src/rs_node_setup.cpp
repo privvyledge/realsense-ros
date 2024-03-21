@@ -319,7 +319,12 @@ void BaseRealSenseNode::startPublishers(const std::vector<stream_profile>& profi
     if (_is_accel_enabled && _is_gyro_enabled && (_imu_sync_method > imu_sync_method::NONE))
     {
         rmw_qos_profile_t qos = _use_intra_process ? qos_string_to_qos(DEFAULT_QOS) : qos_string_to_qos(HID_QOS);
-        
+
+        /*
+        Publish the IMU message with RELIABLE QoS because some subscribers will not be able to receive messages
+        if its published with BEST_EFFORT Qos. Todo: enable this as a parameter (preferably dynamic)
+        */
+        qos.reliability = RMW_QOS_POLICY_RELIABILITY_RELIABLE;
         _synced_imu_publisher = std::make_shared<SyncedImuPublisher>(_node.create_publisher<sensor_msgs::msg::Imu>("~/imu", 
                                                         rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(qos), qos)));
     }
